@@ -14,7 +14,7 @@ def enviar_whatsapp(telefone, mensagem):
         if not telefone_limpo.startswith('55'):
             telefone_limpo = '55' + telefone_limpo
 
-        # 🔴 CONFIGURE AQUI (mesma API do outro projeto)
+        #  CONFIGURE AQUI (mesma API do outro projeto)
         url = "SUA_URL_API"
 
         payload = {
@@ -24,7 +24,7 @@ def enviar_whatsapp(telefone, mensagem):
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "SEU_TOKEN"
+            "Authorization": ""
         }
 
         response = requests.post(url, json=payload, headers=headers)

@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from apps.whatsapp import enviar_aviso_falta
 from django.utils import timezone
 from django.db.models import Count, Q  # se for usar no gráfico
 from django.db import IntegrityError
@@ -1180,10 +1181,23 @@ Colégio Estadual Cívico-Militar Vereador Luiz Zanchim
                 enviar_whatsapp(telefone, mensagem)
             else:
                 print(f"⚠️ Aluno {aluno.nome} sem telefone cadastrado")
+                # 📲 ENVIO WHATSAPP
+                telefone = getattr(aluno, 'telefone_responsavel', None)
+
+                if not telefone:
+                    telefone = getattr(aluno, 'telefone', None)
+
+                if telefone:
+                    enviar_aviso_falta(
+                        telefone,
+                        aluno.nome,
+                        data
+                    )
 
             messages.success(request, f'Falta registrada para {aluno.nome}')
 
         except Exception as e:
+            print("ERRO DETALHADO:", e)
             messages.error(request, f'Erro: {str(e)}')
 
         return redirect('controle_faltas_alunos_antigo')
@@ -1198,6 +1212,7 @@ def editar_falta_aluno(request, falta_id):
     falta = get_object_or_404(RegistroFaltaAluno, id=falta_id)
 
     if request.method == 'POST':
+        print("POST:", request.POST)
         falta.quantidade_faltas = request.POST.get('quantidade', 1)
         falta.justificada = request.POST.get('justificada') == 'on'
         falta.responsavel_contatado = request.POST.get('responsavel', '')
@@ -1285,10 +1300,10 @@ def pertence_ao_grupo_equipe_ou_digitadores(user):
         return False
     return user.groups.filter(name__in=['Equipe Diretiva', 'Digitadores']).exists()
 
+
 @login_required
-@user_passes_test(pertence_ao_grupo_equipe_ou_digitadores, login_url='/')  # ← CORRETO (novo)
+@user_passes_test(pertence_ao_grupo_equipe_ou_digitadores, login_url='/')
 def registrar_ocorrencia_aluno(request):
-    # Recupera última data da sessão
     ultima_data_str = request.session.get('ultima_data_ocorrencia')
     if ultima_data_str:
         try:
@@ -1298,7 +1313,6 @@ def registrar_ocorrencia_aluno(request):
     else:
         ultima_data = timezone.now().date()
 
-    # Recupera última turma da sessão
     ultima_turma_id = request.session.get('ultima_turma_ocorrencia_id')
     ultima_turma = None
     if ultima_turma_id:
@@ -1309,90 +1323,96 @@ def registrar_ocorrencia_aluno(request):
 
     if request.method == 'POST':
         form = RegistroOcorrenciaForm(request.POST)
+
         if form.is_valid():
             turma = form.cleaned_data['turma']
             numero = form.cleaned_data['numero_aluno']
 
             aluno = Aluno.objects.filter(turma=turma, numero=numero).first()
+
             if not aluno:
                 messages.error(request, f'Aluno número {numero} não encontrado na turma {turma.nome}!')
-                return render(request, 'registrar_ocorrencia.html', {
-                    'form': form,
-                    'ultimas_ocorrencias': RegistroOcorrenciaAluno.objects.select_related('aluno', 'aluno__turma').order_by('-data', '-horario_chegada')[:10]
-                })
+                return redirect('registrar_ocorrencia_aluno')
 
             ocorrencia = form.save(commit=False)
             tipo_ocorrencia = request.POST.get('tipo_ocorrencia', 'falta')
+
             ocorrencia.tipo_ocorrencia = tipo_ocorrencia
             ocorrencia.observacoes_adicionais = request.POST.get('observacoes_adicionais', '')
             ocorrencia.turno = aluno.turma.turno
-            ocorrencia.faltou = (tipo_ocorrencia == 'falta')  # ← LINHA CRÍTICA
+            ocorrencia.faltou = (tipo_ocorrencia == 'falta')
+            ocorrencia.aluno = aluno
+            ocorrencia.registrado_por = request.user
 
             if ocorrencia.horario_chegada == '':
                 ocorrencia.horario_chegada = None
+
             if ocorrencia.horario_contato == '':
                 ocorrencia.horario_contato = None
 
-        try:
-            ocorrencia.aluno = aluno
-            ocorrencia.registrado_por = request.user
-            ocorrencia.save()
-        except IntegrityError:
-            messages.error(request, '❌ Já existe um registro para este aluno nesta data com o mesmo tipo de ocorrência. Não é possível duplicar.')
-            return redirect('registrar_ocorrencia_aluno')
+            try:
+                ocorrencia.save()
+            except IntegrityError:
+                messages.error(request, '❌ Já existe um registro para este aluno nesta data com o mesmo tipo de ocorrência.')
+                return redirect('registrar_ocorrencia_aluno')
 
-            # ===== ENVIAR WHATSAPP SE FOR FALTA =====
-            if tipo_ocorrencia == 'falta' and aluno.telefone:
-                try:
-                    mensagem = f"""🏫 *CCM LUIZ ZANCHIM*
+            # 📲 ENVIO WHATSAPP PELO TEMPLATE OFICIAL
+            if tipo_ocorrencia == 'falta':
+                telefone = getattr(aluno, 'telefone_responsavel', None)
 
-⚠️ *OCORRÊNCIA REGISTRADA*
+                if not telefone:
+                    telefone = getattr(aluno, 'telefone', None)
 
-*Aluno:* {aluno.nome}
-*Turma:* {aluno.turma.nome}
-*Data:* {ocorrencia.data.strftime('%d/%m/%Y')}
-*Tipo:* {ocorrencia.get_tipo_ocorrencia_display()}
+                if telefone:
+                    try:
+                        enviar_aviso_falta(
+                            telefone,
+                            aluno.nome,
+                            ocorrencia.data.strftime('%d/%m/%Y')
+                        )
+                        print(f"📱 WhatsApp enviado para {aluno.nome}")
+                    except Exception as e:
+                        print(f"❌ Erro ao enviar WhatsApp: {e}")
+                else:
+                    print(f"⚠️ Aluno {aluno.nome} sem telefone cadastrado.")
 
-Para mais detalhes, entre em contato com a Equipe Pedagógica."""
-
-                    enviar_whatsapp(aluno.telefone, mensagem)
-                    print(f"📱 WhatsApp enviado para {aluno.nome}")
-                except Exception as e:
-                    print(f"❌ Erro ao enviar WhatsApp: {e}")
-
-            # ===== SALVA DATA, TURMA, TIPO E TURNO NA SESSÃO =====
             request.session['ultima_data_ocorrencia'] = ocorrencia.data.isoformat()
             request.session['ultima_turma_ocorrencia_id'] = turma.id
             request.session['ultima_turma_ocorrencia_nome'] = turma.nome
             request.session['ultimo_tipo_ocorrencia'] = tipo_ocorrencia
-            request.session['ultimo_turno'] = request.POST.get('turno', 'manha')  # ← NOVO
+            request.session['ultimo_turno'] = request.POST.get('turno', 'manha')
 
             messages.success(request, f'Ocorrência registrada para {aluno.nome} (Turma {turma.nome}, Nº {numero})')
             return redirect('registrar_ocorrencia_aluno')
+
         else:
+            print("ERROS DO FORM:", form.errors)
             messages.error(request, 'Erro no formulário. Verifique os dados.')
+
     else:
-        # ===== RECUPERA O ÚLTIMO TIPO E TURNO DA SESSÃO =====
         ultimo_tipo = request.session.get('ultimo_tipo_ocorrencia', 'falta')
-        ultimo_turno = request.session.get('ultimo_turno', 'manha')  # ← NOVO
+        ultimo_turno = request.session.get('ultimo_turno', 'manha')
 
         initial_data = {
             'data': ultima_data.isoformat(),
             'faltou': (ultimo_tipo == 'falta'),
             'tipo_ocorrencia': ultimo_tipo,
-            'turno': ultimo_turno,  # ← NOVO
+            'turno': ultimo_turno,
         }
+
         form = RegistroOcorrenciaForm(initial=initial_data)
+
         if ultima_turma:
             form.fields['turma'].initial = ultima_turma
 
-    ultimas_ocorrencias = RegistroOcorrenciaAluno.objects.select_related('aluno', 'aluno__turma').order_by('-data', '-horario_chegada')[:10]
+    ultimas_ocorrencias = RegistroOcorrenciaAluno.objects.select_related(
+        'aluno', 'aluno__turma'
+    ).order_by('-data', '-horario_chegada')[:10]
 
     return render(request, 'registrar_ocorrencia.html', {
         'form': form,
         'ultimas_ocorrencias': ultimas_ocorrencias
     })
-
 def buscar_aluno_ajax(request):
     turma_id = request.GET.get('turma_id')
     numero = request.GET.get('numero', '')
