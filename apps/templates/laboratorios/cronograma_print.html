@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cronograma Semanal - Impressão</title>
+    <style>
+        @page {
+            size: landscape;
+            margin: 8mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            color: #111;
+            background: #fff;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+        }
+
+        .cabecalho {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .cabecalho h1 {
+            margin: 0 0 4px;
+            font-size: 18px;
+            line-height: 1.2;
+        }
+
+        .cabecalho p {
+            margin: 2px 0;
+            font-size: 11px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            page-break-inside: avoid;
+        }
+
+        th,
+        td {
+            border: 1px solid #222;
+            padding: 3px;
+            text-align: center;
+            vertical-align: middle;
+            overflow-wrap: anywhere;
+        }
+
+        thead th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+
+        .horario {
+            width: 7%;
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .schedule-cell {
+            height: 48px;
+        }
+
+        .agendamento {
+            line-height: 1.2;
+        }
+
+        .disciplina {
+            display: block;
+            font-weight: bold;
+        }
+
+        .turma,
+        .professor {
+            display: block;
+        }
+
+        @media print {
+            html,
+            body {
+                width: 100%;
+            }
+
+            .cabecalho {
+                margin-bottom: 8px;
+            }
+
+            table {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cabecalho">
+        <h1>Cronograma Semanal - Laboratórios Fixos</h1>
+        <p>Semana de {{ data_inicio|date:"d/m/Y" }} a {{ data_fim|date:"d/m/Y" }}</p>
+        {% if turno_filtro == 'manha' %}
+            <p>Turno: Manhã</p>
+        {% elif turno_filtro == 'tarde' %}
+            <p>Turno: Tarde</p>
+        {% else %}
+            <p>Turno: Todos</p>
+        {% endif %}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th class="horario">Horário</th>
+                {% for lab in laboratorios %}
+                    <th colspan="5">{{ lab.nome }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th class="horario"></th>
+                {% for lab in laboratorios %}
+                    {% for dia in dias_semana %}
+                        <th>{{ dia|slice:":-6" }}</th>
+                    {% endfor %}
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for horario in horarios %}
+                <tr>
+                    <td class="horario">{{ horario }}ª Aula</td>
+                    {% for lab in laboratorios %}
+                        {% for dia in dias_semana %}
+                            <td class="schedule-cell">
+                                {% for k, a in agendamentos_dict.items %}
+                                    {% if k.0 == lab.id and k.1 == dia and k.2 == horario %}
+                                        <div class="agendamento">
+                                            <span class="disciplina">{{ a.disciplina }}</span>
+                                            <span class="turma">{{ a.turma.nome }}</span>
+                                            <span class="professor">{{ a.professor.nome_abreviado }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
