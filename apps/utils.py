@@ -1,26 +1,38 @@
-from twilio.rest import Client
-from django.conf import settings
+import requests
 import re
 
 def enviar_whatsapp(telefone, mensagem):
-    """Envia mensagem via WhatsApp usando Twilio"""
+    """Envia mensagem via API externa (sem Twilio)"""
+
     if not telefone:
         return None
-    
-    # Limpar telefone
-    telefone_limpo = re.sub(r'[^0-9]', '', str(telefone))
-    if not telefone_limpo.startswith('55'):
-        telefone_limpo = '55' + telefone_limpo
-    
-    client = Client(
-        settings.TWILIO_API_KEY_SID,
-        settings.TWILIO_API_KEY_SECRET,
-        settings.TWILIO_ACCOUNT_SID
-    )
-    
-    message = client.messages.create(
-        body=mensagem,
-        from_=settings.TWILIO_WHATSAPP_NUMBER,
-        to=f'whatsapp:{telefone_limpo}'
-    )
-    return message.sid
+
+    try:
+        # limpa telefone
+        telefone_limpo = re.sub(r'[^0-9]', '', str(telefone))
+
+        if not telefone_limpo.startswith('55'):
+            telefone_limpo = '55' + telefone_limpo
+
+        # 🔴 CONFIGURE AQUI (mesma API do outro projeto)
+        url = "SUA_URL_API"
+
+        payload = {
+            "phone": telefone_limpo,
+            "message": mensagem
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "SEU_TOKEN"
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        print("Resposta WhatsApp:", response.text)
+
+        return response.text
+
+    except Exception as e:
+        print("Erro ao enviar WhatsApp:", e)
+        return None

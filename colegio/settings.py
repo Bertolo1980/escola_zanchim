@@ -58,7 +58,6 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            '/home/gestaoluizzanchim/apps/templates',
             os.path.join(BASE_DIR, 'apps/templates'),
         ],
         'APP_DIRS': True,
@@ -139,12 +138,6 @@ CKEDITOR_CONFIGS = {
         'width': '100%',
     },
 }
-
-# ========== TWILIO WHATSAPP CONFIG ==========
-TWILIO_ACCOUNT_SID = ''
-TWILIO_API_KEY_SID = ''
-TWILIO_API_KEY_SECRET = ''
-TWILIO_WHATSAPP_NUMBER = ''
 
 # ========== CONFIGURAÇÕES DE E-MAIL ==========
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

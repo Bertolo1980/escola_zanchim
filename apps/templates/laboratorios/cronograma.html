@@ -9,7 +9,9 @@
         </div>
                  <!-- BOTÕES DE IMPRESSÃO E EXPORTAÇÃO -->
             <div class="mb-3 text-end">
-               <a href="{% url 'cronograma_print' %}" target="_blank" class="btn btn-info">
+<a href="{% url 'cronograma_print' %}?data_inicio={{ data_inicio|date:'Y-m-d' }}&turno={{ turno_filtro }}"
+   target="_blank"
+   class="btn btn-info">
     <i class="fas fa-print"></i> Imprimir / PDF
 </a>
                 <a href="{% url 'exportar_cronograma_excel' %}?data_inicio={{ data_inicio|date:'Y-m-d' }}{% if request.GET.turno %}&turno={{ request.GET.turno }}{% endif %}" class="btn btn-success">

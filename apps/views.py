@@ -1145,7 +1145,9 @@ def registrar_falta_aluno(request):
 
         try:
             aluno = Aluno.objects.get(id=aluno_id)
-            RegistroFaltaAluno.objects.create(
+
+            # 📝 REGISTRA FALTA
+            falta = RegistroFaltaAluno.objects.create(
                 aluno=aluno,
                 data=data,
                 quantidade_faltas=quantidade,
@@ -1154,7 +1156,33 @@ def registrar_falta_aluno(request):
                 observacoes=observacoes,
                 registrado_por=request.user
             )
+
+            # 📲 ENVIO WHATSAPP
+            from apps.utils import enviar_whatsapp
+
+            mensagem = f"""📢 Aviso Escolar
+
+Olá, informamos que o aluno {aluno.nome} faltou no dia {data}.
+
+Quantidade de faltas: {quantidade}
+
+Colégio Estadual Cívico-Militar Vereador Luiz Zanchim
+"""
+
+            # tenta pegar telefone do responsável
+            telefone = getattr(aluno, 'telefone_responsavel', None)
+
+            # fallback (caso o campo seja diferente)
+            if not telefone:
+                telefone = getattr(aluno, 'telefone', None)
+
+            if telefone:
+                enviar_whatsapp(telefone, mensagem)
+            else:
+                print(f"⚠️ Aluno {aluno.nome} sem telefone cadastrado")
+
             messages.success(request, f'Falta registrada para {aluno.nome}')
+
         except Exception as e:
             messages.error(request, f'Erro: {str(e)}')
 
