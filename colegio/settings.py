@@ -20,11 +20,7 @@ SECRET_KEY = 'django-insecure-mxntg-(z5@zzn81h3wpe#(^@*m%ek842k0ai&(ft80j-f6ufr&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['gestaoluizzanchim.pythonanywhere.com']
-
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['luizzanchim.tech', 'www.luizzanchim.tech']
 
 
 # Application definition
@@ -144,9 +140,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'antonio.senhorini@escola.pr.gov.br'  # seu e-mail
-EMAIL_HOST_PASSWORD = 'dbkicjmgqkowvpqh'
-DEFAULT_FROM_EMAIL = 'antonio.senhorini@escola.pr.gov.br'
+EMAIL_HOST_USER = 'bertoloa182@gmail.com'
+EMAIL_HOST_PASSWORD = 'ngxg rdpm qjeb ivyf'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 CSRF_TRUSTED_ORIGINS = [
     "https://luizzanchim.tech",
@@ -154,3 +150,5 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
