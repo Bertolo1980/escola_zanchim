@@ -147,3 +147,10 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'antonio.senhorini@escola.pr.gov.br'  # seu e-mail
 EMAIL_HOST_PASSWORD = 'dbkicjmgqkowvpqh'
 DEFAULT_FROM_EMAIL = 'antonio.senhorini@escola.pr.gov.br'
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://luizzanchim.tech",
+    "https://www.luizzanchim.tech",
+]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
