@@ -20,16 +20,54 @@
 </head>
 <body>
     <!-- Cabeçalho padrão -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fas fa-shield-alt me-2"></i>Colégio Cívico Militar
-            </a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <!-- LOGO -->
+        <a class="navbar-brand" href="/painel-equipe/">
+            <i class="fas fa-shield-alt me-2"></i>Colégio Cívico Militar
+        </a>
+
+        <!-- BOTÃO MOBILE -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- MENU -->
+        <div class="collapse navbar-collapse" id="menu">
+
+            <!-- MENU PRINCIPAL -->
+            <ul class="navbar-nav me-auto">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/painel-equipe/">🏠 Início</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/apps/recado/">📢 Recados</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/apps/documento/">📁 Documentos</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/apps/evento/">📅 Eventos</a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/apps/video/">🎥 Vídeos</a>
+                </li>
+
+            </ul>
+
+            <!-- MENU DIREITA (mantido) -->
             <div class="navbar-nav ms-auto">
+
                 {% if user.is_authenticated %}
                     <span class="nav-item nav-link text-white">
                         <i class="fas fa-user-circle me-1"></i>{{ user.get_username }}
                     </span>
+
                     <form method="post" action="{% url 'logout' %}" class="nav-item">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-link nav-link text-white">
@@ -41,9 +79,12 @@
                         <i class="fas fa-sign-in-alt me-1"></i>Entrar
                     </a>
                 {% endif %}
+
             </div>
+
         </div>
-    </nav>
+    </div>
+</nav>
 
     <!-- Conteúdo principal -->
     <main class="py-4">
