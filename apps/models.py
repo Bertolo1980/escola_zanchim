@@ -430,7 +430,6 @@ class RegistroOcorrenciaAluno(models.Model):
     TURNO_CHOICES = [
         ('manha', 'Manhã'),
         ('tarde', 'Tarde'),
-        ('integral', 'Integral'),
     ]
 
     aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name='ocorrencias')

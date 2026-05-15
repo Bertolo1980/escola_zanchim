@@ -22,7 +22,7 @@ from .models import (
 
 from .forms import (
     RecadoInternoForm, DocumentoPrivadoForm, EventoPrivadoForm,
-    RegistroOcorrenciaForm, RegistroFaltaForm
+    RegistroOcorrenciaForm
 )
 
 # ===== NOVO IMPORT DO WHATSAPP =====
@@ -371,18 +371,40 @@ def registrar_falta(request):
     if request.method == 'GET':
         return render(request, 'registrar_falta.html', {'professores': professores})
     if request.method == 'POST':
-        form = RegistroFaltaForm(request.POST, professores=professores)
-        if form.is_valid():
-            falta = form.save(commit=False)
-            falta.registrado_por = request.user
-            falta.save()
+        professor_id = request.POST.get('professor')
+        data = request.POST.get('data')
+        horario_previsto = request.POST.get('horario_previsto')
+        horario_real = request.POST.get('horario_real') or None
+        tipo = request.POST.get('tipo')
+        observacao = request.POST.get('observacao', '')
+        try:
+            professor = User.objects.get(id=professor_id)
+            data_obj = datetime.strptime(data, '%Y-%m-%d').date()
+            previsto_obj = datetime.strptime(horario_previsto, '%H:%M').time()
+            real_obj = None
+            if horario_real:
+                real_obj = datetime.strptime(horario_real, '%H:%M').time()
+            minutos_atraso = 0
+            if real_obj and tipo == 'atraso':
+                previsto_min = previsto_obj.hour * 60 + previsto_obj.minute
+                real_min = real_obj.hour * 60 + real_obj.minute
+                minutos_atraso = max(0, real_min - previsto_min)
+            RegistroFalta.objects.create(
+                professor=professor,
+                data=data_obj,
+                horario_previsto=previsto_obj,
+                horario_real=real_obj,
+                tipo=tipo,
+                minutos_atraso=minutos_atraso,
+                observacao=observacao,
+                registrado_por=request.user
+            )
             messages.success(request, 'Registro salvo com sucesso!')
             return redirect('controle_faltas')
-
-        for campo, erros in form.errors.items():
-            nome_campo = form.fields[campo].label if campo in form.fields else campo
-            for erro in erros:
-                messages.error(request, f'{nome_campo}: {erro}')
+        except User.DoesNotExist:
+            messages.error(request, 'Professor não encontrado!')
+        except Exception as e:
+            messages.error(request, f'Erro ao salvar: {str(e)}')
         return redirect('controle_faltas')
 
 # =============================================================================
@@ -1312,7 +1334,7 @@ def registrar_ocorrencia_aluno(request):
             tipo_ocorrencia = request.POST.get('tipo_ocorrencia', 'falta')
             ocorrencia.tipo_ocorrencia = tipo_ocorrencia
             ocorrencia.observacoes_adicionais = request.POST.get('observacoes_adicionais', '')
-            ocorrencia.turno = form.cleaned_data.get('turno') or aluno.turma.turno or 'manha'
+            ocorrencia.turno = aluno.turma.turno
             ocorrencia.faltou = (tipo_ocorrencia == 'falta')  # ← LINHA CRÍTICA
 
             if ocorrencia.horario_chegada == '':
@@ -1320,13 +1342,13 @@ def registrar_ocorrencia_aluno(request):
             if ocorrencia.horario_contato == '':
                 ocorrencia.horario_contato = None
 
-            try:
-                ocorrencia.aluno = aluno
-                ocorrencia.registrado_por = request.user
-                ocorrencia.save()
-            except IntegrityError:
-                messages.error(request, '❌ Já existe um registro para este aluno nesta data com o mesmo tipo de ocorrência. Não é possível duplicar.')
-                return redirect('registrar_ocorrencia_aluno')
+        try:
+            ocorrencia.aluno = aluno
+            ocorrencia.registrado_por = request.user
+            ocorrencia.save()
+        except IntegrityError:
+            messages.error(request, '❌ Já existe um registro para este aluno nesta data com o mesmo tipo de ocorrência. Não é possível duplicar.')
+            return redirect('registrar_ocorrencia_aluno')
 
             # ===== ENVIAR WHATSAPP SE FOR FALTA =====
             if tipo_ocorrencia == 'falta' and aluno.telefone:
@@ -1357,10 +1379,7 @@ Para mais detalhes, entre em contato com a Equipe Pedagógica."""
             messages.success(request, f'Ocorrência registrada para {aluno.nome} (Turma {turma.nome}, Nº {numero})')
             return redirect('registrar_ocorrencia_aluno')
         else:
-            for campo, erros in form.errors.items():
-                nome_campo = form.fields[campo].label if campo in form.fields else campo
-                for erro in erros:
-                    messages.error(request, f'{nome_campo}: {erro}')
+            messages.error(request, 'Erro no formulário. Verifique os dados.')
     else:
         # ===== RECUPERA O ÚLTIMO TIPO E TURNO DA SESSÃO =====
         ultimo_tipo = request.session.get('ultimo_tipo_ocorrencia', 'falta')
