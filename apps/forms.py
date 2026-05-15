@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import RecadoInterno, DocumentoPrivado, EventoPrivado, RegistroOcorrenciaAluno, Aluno, Turma, AvisoProfessor
+from .models import RecadoInterno, DocumentoPrivado, EventoPrivado, RegistroOcorrenciaAluno, Aluno, Turma, AvisoProfessor, RegistroFalta
 
 # ===== FORMULÁRIOS EXISTENTES =====
 
@@ -69,6 +69,27 @@ class AvisoProfessorForm(forms.ModelForm):
             'motivo': 'Motivo',
             'observacao': 'Observação opcional',
         }
+
+
+class RegistroFaltaForm(forms.ModelForm):
+    class Meta:
+        model = RegistroFalta
+        fields = ['professor', 'data', 'turno', 'horario_previsto', 'horario_real', 'tipo', 'observacao']
+        widgets = {
+            'professor': forms.Select(attrs={'class': 'form-select'}),
+            'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'turno': forms.Select(attrs={'class': 'form-select'}),
+            'horario_previsto': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'horario_real': forms.TimeInput(attrs={'class': 'form-control', 'type': 'time'}),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        professores = kwargs.pop('professores', None)
+        super().__init__(*args, **kwargs)
+        if professores is not None:
+            self.fields['professor'].queryset = professores
 
 
 class RegistroOcorrenciaForm(forms.ModelForm):

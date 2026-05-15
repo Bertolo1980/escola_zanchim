@@ -22,7 +22,7 @@ from .models import (
 
 from .forms import (
     RecadoInternoForm, DocumentoPrivadoForm, EventoPrivadoForm,
-    RegistroOcorrenciaForm
+    RegistroOcorrenciaForm, RegistroFaltaForm
 )
 
 # ===== NOVO IMPORT DO WHATSAPP =====
@@ -371,40 +371,18 @@ def registrar_falta(request):
     if request.method == 'GET':
         return render(request, 'registrar_falta.html', {'professores': professores})
     if request.method == 'POST':
-        professor_id = request.POST.get('professor')
-        data = request.POST.get('data')
-        horario_previsto = request.POST.get('horario_previsto')
-        horario_real = request.POST.get('horario_real') or None
-        tipo = request.POST.get('tipo')
-        observacao = request.POST.get('observacao', '')
-        try:
-            professor = User.objects.get(id=professor_id)
-            data_obj = datetime.strptime(data, '%Y-%m-%d').date()
-            previsto_obj = datetime.strptime(horario_previsto, '%H:%M').time()
-            real_obj = None
-            if horario_real:
-                real_obj = datetime.strptime(horario_real, '%H:%M').time()
-            minutos_atraso = 0
-            if real_obj and tipo == 'atraso':
-                previsto_min = previsto_obj.hour * 60 + previsto_obj.minute
-                real_min = real_obj.hour * 60 + real_obj.minute
-                minutos_atraso = max(0, real_min - previsto_min)
-            RegistroFalta.objects.create(
-                professor=professor,
-                data=data_obj,
-                horario_previsto=previsto_obj,
-                horario_real=real_obj,
-                tipo=tipo,
-                minutos_atraso=minutos_atraso,
-                observacao=observacao,
-                registrado_por=request.user
-            )
+        form = RegistroFaltaForm(request.POST, professores=professores)
+        if form.is_valid():
+            falta = form.save(commit=False)
+            falta.registrado_por = request.user
+            falta.save()
             messages.success(request, 'Registro salvo com sucesso!')
             return redirect('controle_faltas')
-        except User.DoesNotExist:
-            messages.error(request, 'Professor não encontrado!')
-        except Exception as e:
-            messages.error(request, f'Erro ao salvar: {str(e)}')
+
+        for campo, erros in form.errors.items():
+            nome_campo = form.fields[campo].label if campo in form.fields else campo
+            for erro in erros:
+                messages.error(request, f'{nome_campo}: {erro}')
         return redirect('controle_faltas')
 
 # =============================================================================
