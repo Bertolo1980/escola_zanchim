@@ -113,6 +113,43 @@ class Professor(models.Model):
         ordering = ['nome_completo']
 
 
+class AvisoProfessor(models.Model):
+    MOTIVO_CHOICES = [
+        ('falta', 'Falta'),
+        ('atestado', 'Atestado'),
+        ('atraso', 'Atraso'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('visualizado', 'Visualizado'),
+    ]
+
+    professor_nome = models.CharField(max_length=200, verbose_name="Professor / Nome completo")
+    disciplina = models.CharField(max_length=120)
+    dia = models.DateField()
+    motivo = models.CharField(max_length=20, choices=MOTIVO_CHOICES)
+    observacao = models.TextField(blank=True, verbose_name="Observação")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente')
+    criado_em = models.DateTimeField(auto_now_add=True)
+    visualizado_em = models.DateTimeField(null=True, blank=True)
+    visualizado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='avisos_professores_visualizados'
+    )
+
+    def __str__(self):
+        return f"{self.professor_nome} - {self.get_motivo_display()} - {self.dia}"
+
+    class Meta:
+        verbose_name = "Aviso de Professor"
+        verbose_name_plural = "Avisos de Professores"
+        ordering = ['status', '-dia', '-criado_em']
+
+
 # ===== MODELOS DO PAINEL DA EQUIPE =====
 
 class DocumentoPrivado(models.Model):

@@ -27,6 +27,8 @@ from .forms import (
 
 # ===== NOVO IMPORT DO WHATSAPP =====
 from apps.utils import enviar_whatsapp
+from .models import AvisoProfessor
+from .forms import AvisoProfessorForm
 
 # Função de teste para verificar se o usuário está no grupo "Equipe Diretiva"
 def pertence_ao_grupo_equipe_diretiva(user):
@@ -38,6 +40,11 @@ def pertence_ao_grupo_equipe_diretiva(user):
 def pertence_ao_grupo_equipe_diretiva(user):
     if user.is_authenticated:
         return user.groups.filter(name__iexact='Equipe Diretiva').exists()
+    return False
+
+def admin_ou_equipe_diretiva(user):
+    if user.is_authenticated:
+        return user.is_superuser or user.groups.filter(name__iexact='Equipe Diretiva').exists()
     return False
 
 def home(request):
@@ -53,6 +60,36 @@ def home(request):
         'videos': videos,
         'user': request.user,
     })
+
+def aviso_professor(request):
+    if request.method == 'POST':
+        form = AvisoProfessorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Aviso enviado com sucesso.')
+            return redirect('aviso_professor')
+    else:
+        form = AvisoProfessorForm()
+
+    return render(request, 'aviso_professor.html', {'form': form})
+
+@login_required
+@user_passes_test(admin_ou_equipe_diretiva, login_url='/')
+def lista_avisos_professores(request):
+    avisos = AvisoProfessor.objects.all().order_by('status', '-dia', '-criado_em')
+    return render(request, 'lista_avisos_professores.html', {'avisos': avisos})
+
+@login_required
+@user_passes_test(admin_ou_equipe_diretiva, login_url='/')
+def marcar_aviso_professor_visualizado(request, aviso_id):
+    aviso = get_object_or_404(AvisoProfessor, id=aviso_id)
+    if request.method == 'POST':
+        aviso.status = 'visualizado'
+        aviso.visualizado_em = timezone.now()
+        aviso.visualizado_por = request.user
+        aviso.save(update_fields=['status', 'visualizado_em', 'visualizado_por'])
+        messages.success(request, 'Aviso marcado como visualizado.')
+    return redirect('lista_avisos_professores')
 
 from django.db.models import Count
 from calendar import monthrange

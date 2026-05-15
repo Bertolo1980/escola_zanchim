@@ -159,6 +159,15 @@ class ProfessorAdmin(ImportExportMixin, admin.ModelAdmin):
 
 admin.site.register(Professor, ProfessorAdmin)
 
+from .models import AvisoProfessor
+
+@admin.register(AvisoProfessor)
+class AvisoProfessorAdmin(admin.ModelAdmin):
+    list_display = ('professor_nome', 'disciplina', 'dia', 'motivo', 'status', 'criado_em')
+    list_filter = ('status', 'motivo', 'dia')
+    search_fields = ('professor_nome', 'disciplina', 'observacao')
+    readonly_fields = ('criado_em', 'visualizado_em', 'visualizado_por')
+
 # ===== REGISTRO DE OCORRÊNCIAS DE ALUNOS =====
 from .models import RegistroOcorrenciaAluno, AgendamentoLab
 

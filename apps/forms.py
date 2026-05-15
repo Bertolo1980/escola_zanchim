@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import RecadoInterno, DocumentoPrivado, EventoPrivado, RegistroOcorrenciaAluno, Aluno, Turma
+from .models import RecadoInterno, DocumentoPrivado, EventoPrivado, RegistroOcorrenciaAluno, Aluno, Turma, AvisoProfessor
 
 # ===== FORMULÁRIOS EXISTENTES =====
 
@@ -37,6 +37,39 @@ class EventoPrivadoForm(forms.ModelForm):
         }
 
 # ===== FORMULÁRIO PARA REGISTRO DE OCORRÊNCIAS (CORRIGIDO) =====
+
+class AvisoProfessorForm(forms.ModelForm):
+    class Meta:
+        model = AvisoProfessor
+        fields = ['professor_nome', 'disciplina', 'dia', 'motivo', 'observacao']
+        widgets = {
+            'professor_nome': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome completo'
+            }),
+            'disciplina': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Disciplina'
+            }),
+            'dia': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'motivo': forms.Select(attrs={'class': 'form-select'}),
+            'observacao': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Observação opcional'
+            }),
+        }
+        labels = {
+            'professor_nome': 'Professor / Nome completo',
+            'disciplina': 'Disciplina',
+            'dia': 'Dia',
+            'motivo': 'Motivo',
+            'observacao': 'Observação opcional',
+        }
+
 
 class RegistroOcorrenciaForm(forms.ModelForm):
     # Campo turma agora é um dropdown

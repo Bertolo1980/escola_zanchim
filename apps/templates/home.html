@@ -88,6 +88,23 @@
     <div class="container my-5">
         <div class="row g-4">
 
+            <!-- AVISO DE AUSENCIA OU ATRASO -->
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="fas fa-user-clock me-2"></i>Avisar ausência ou atraso
+                    </div>
+                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <p class="mb-0">
+                            Professores podem informar falta, atestado ou atraso sem login.
+                        </p>
+                        <a href="{% url 'aviso_professor' %}" class="btn btn-warning">
+                            <i class="fas fa-paper-plane me-1"></i>Avisar ausência ou atraso
+                        </a>
+                    </div>
+                </div>
+            </div>
+
            <!-- RECADOS FIXADOS -->
             <div class="col-md-6">
                 <div class="card">
