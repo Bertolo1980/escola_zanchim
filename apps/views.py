@@ -1312,7 +1312,7 @@ def registrar_ocorrencia_aluno(request):
             tipo_ocorrencia = request.POST.get('tipo_ocorrencia', 'falta')
             ocorrencia.tipo_ocorrencia = tipo_ocorrencia
             ocorrencia.observacoes_adicionais = request.POST.get('observacoes_adicionais', '')
-            ocorrencia.turno = aluno.turma.turno
+            ocorrencia.turno = form.cleaned_data.get('turno') or aluno.turma.turno or 'manha'
             ocorrencia.faltou = (tipo_ocorrencia == 'falta')  # ← LINHA CRÍTICA
 
             if ocorrencia.horario_chegada == '':
@@ -1320,13 +1320,13 @@ def registrar_ocorrencia_aluno(request):
             if ocorrencia.horario_contato == '':
                 ocorrencia.horario_contato = None
 
-        try:
-            ocorrencia.aluno = aluno
-            ocorrencia.registrado_por = request.user
-            ocorrencia.save()
-        except IntegrityError:
-            messages.error(request, '❌ Já existe um registro para este aluno nesta data com o mesmo tipo de ocorrência. Não é possível duplicar.')
-            return redirect('registrar_ocorrencia_aluno')
+            try:
+                ocorrencia.aluno = aluno
+                ocorrencia.registrado_por = request.user
+                ocorrencia.save()
+            except IntegrityError:
+                messages.error(request, '❌ Já existe um registro para este aluno nesta data com o mesmo tipo de ocorrência. Não é possível duplicar.')
+                return redirect('registrar_ocorrencia_aluno')
 
             # ===== ENVIAR WHATSAPP SE FOR FALTA =====
             if tipo_ocorrencia == 'falta' and aluno.telefone:
@@ -1357,7 +1357,10 @@ Para mais detalhes, entre em contato com a Equipe Pedagógica."""
             messages.success(request, f'Ocorrência registrada para {aluno.nome} (Turma {turma.nome}, Nº {numero})')
             return redirect('registrar_ocorrencia_aluno')
         else:
-            messages.error(request, 'Erro no formulário. Verifique os dados.')
+            for campo, erros in form.errors.items():
+                nome_campo = form.fields[campo].label if campo in form.fields else campo
+                for erro in erros:
+                    messages.error(request, f'{nome_campo}: {erro}')
     else:
         # ===== RECUPERA O ÚLTIMO TIPO E TURNO DA SESSÃO =====
         ultimo_tipo = request.session.get('ultimo_tipo_ocorrencia', 'falta')
