@@ -1,0 +1,140 @@
+{% extends 'base_painel.html' %}
+
+{% block title %}Detalhes do Aviso - Painel da Equipe{% endblock %}
+
+{% block content %}
+<div class="content-card">
+    <div class="page-header">
+        <h2><i class="fas fa-bell"></i> Detalhes do Aviso</h2>
+        <a href="{% url 'listar_avisos_professor' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Informações principais -->
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user"></i> Informações do Professor
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="fw-bold">Nome:</td>
+                            <td>{{ aviso.nome_professor }}</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">E-mail:</td>
+                            <td>
+                                <a href="mailto:{{ aviso.email_professor }}">{{ aviso.email_professor }}</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt"></i> Detalhes do Aviso
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td class="fw-bold">Tipo:</td>
+                            <td>
+                                <span class="badge bg-info">{{ aviso.get_tipo_aviso_display }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Data do Aviso:</td>
+                            <td>
+                                <i class="fas fa-calendar-alt"></i> {{ aviso.data_aviso|date:"d/m/Y" }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Criado em:</td>
+                            <td>
+                                <i class="fas fa-clock"></i> {{ aviso.data_criacao|date:"d/m/Y H:i" }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold">Atualizado em:</td>
+                            <td>
+                                <i class="fas fa-clock"></i> {{ aviso.data_atualizacao|date:"d/m/Y H:i" }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-align-left"></i> Descrição
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p style="white-space: pre-wrap;">{{ aviso.descricao }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra lateral com status -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle"></i> Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if aviso.visualizado %}
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Visualizado</strong>
+                            <hr>
+                            <small>
+                                <strong>Data:</strong> {{ aviso.visualizado_em|date:"d/m/Y H:i" }}<br>
+                                <strong>Por:</strong> {{ aviso.visualizado_por.first_name }} {{ aviso.visualizado_por.last_name }}<br>
+                                (<em>{{ aviso.visualizado_por.username }}</em>)
+                            </small>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Novo Aviso</strong>
+                            <p class="small mt-2">Este aviso ainda não foi visualizado.</p>
+                            <a href="{% url 'marcar_aviso_visualizado' aviso.id %}" class="btn btn-sm btn-success w-100">
+                                <i class="fas fa-check"></i> Marcar como Visualizado
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-sliders-h"></i> Ações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if not aviso.visualizado %}
+                        <a href="{% url 'marcar_aviso_visualizado' aviso.id %}" class="btn btn-success btn-sm w-100 mb-2">
+                            <i class="fas fa-check"></i> Marcar como Visualizado
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'listar_avisos_professor' %}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-arrow-left"></i> Voltar à Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

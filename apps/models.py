@@ -574,3 +574,91 @@ class Emprestimo(models.Model):
     def __str__(self):
         tomador = self.aluno or self.professor or self.turma
         return f"{self.laboratorio.nome} - {self.quantidade} itens - {tomador}"
+
+
+# ===== NOVO MODELO AVISO PROFESSOR =====
+
+class AvisoProfessor(models.Model):
+    TIPO_AVISO_CHOICES = [
+        ('atraso', '⏰ Atraso'),
+        ('falta', '❌ Falta no dia'),
+        ('atestado', '📋 Atestado'),
+        ('outro', '📝 Outra justificativa'),
+    ]
+    
+    nome_professor = models.CharField(
+        max_length=200,
+        verbose_name="Nome do Professor",
+        help_text="Nome completo do professor"
+    )
+    
+    email_professor = models.EmailField(
+        verbose_name="E-mail do Professor",
+        help_text="E-mail para contato"
+    )
+    
+    tipo_aviso = models.CharField(
+        max_length=20,
+        choices=TIPO_AVISO_CHOICES,
+        verbose_name="Tipo de Aviso"
+    )
+    
+    descricao = models.TextField(
+        verbose_name="Descrição/Justificativa",
+        help_text="Descreva os detalhes do seu aviso"
+    )
+    
+    data_aviso = models.DateField(
+        verbose_name="Data do aviso",
+        help_text="Qual é a data em questão?"
+    )
+    
+    visualizado = models.BooleanField(
+        default=False,
+        verbose_name="Visualizado"
+    )
+    
+    data_criacao = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Data de criação"
+    )
+    
+    data_atualizacao = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Data de atualização"
+    )
+    
+    visualizado_em = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Visualizado em"
+    )
+    
+    visualizado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Visualizado por",
+        related_name="avisos_professor_visualizados"
+    )
+    
+    class Meta:
+        verbose_name = "Aviso de Professor"
+        verbose_name_plural = "Avisos de Professores"
+        ordering = ['-data_criacao']
+        indexes = [
+            models.Index(fields=['-data_criacao']),
+            models.Index(fields=['visualizado']),
+        ]
+    
+    def __str__(self):
+        return f"{self.nome_professor} - {self.get_tipo_aviso_display()} ({self.data_aviso})"
+    
+    def marcar_como_visualizado(self, usuario):
+        """Marca o aviso como visualizado por um usuário"""
+        if not self.visualizado:
+            self.visualizado = True
+            self.visualizado_em = timezone.now()
+            self.visualizado_por = usuario
+            self.save()

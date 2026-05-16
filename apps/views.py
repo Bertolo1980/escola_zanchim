@@ -18,12 +18,12 @@ from io import BytesIO
 from .models import (
     Evento, Documento, Recado, DocumentoPrivado, EventoPrivado, RecadoInterno,
     PeriodoAula, RegistroFalta, Video, Turma, Aluno, RegistroFaltaAluno,
-    RegistroOcorrenciaAluno, LogLogin, Professor  # ← ADICIONE APENAS Professor
+    RegistroOcorrenciaAluno, LogLogin, Professor, AvisoProfessor  # ← ADICIONE APENAS Professor
 )
 
 from .forms import (
     RecadoInternoForm, DocumentoPrivadoForm, EventoPrivadoForm,
-    RegistroOcorrenciaForm
+    RegistroOcorrenciaForm, AvisoProfessorForm
 )
 
 # ===== NOVO IMPORT DO WHATSAPP =====
@@ -153,6 +153,9 @@ def painel_equipe(request):
     totais_tarde_lista = [item[1] for item in ranking_tarde]
     # ===== FIM DO RANKING =====
 
+    # ===== AVISOS DE PROFESSORES =====
+    avisos_nao_visualizados = AvisoProfessor.objects.filter(visualizado=False).order_by('-data_criacao')[:5]
+
     # ===== CONTEXTO =====
     context = {
         'usuario': request.user,
@@ -182,6 +185,8 @@ def painel_equipe(request):
         'mes_ranking': mes_ranking,
         'ano_ranking': ano_ranking,
         'total_faltas_periodo': sum(totais_manha_lista) + sum(totais_tarde_lista),
+        # Dados para avisos de professor
+        'avisos_nao_visualizados': avisos_nao_visualizados,
     }
     return render(request, 'painel_equipe.html', context)
 
@@ -2541,5 +2546,98 @@ def webhook_whatsapp(request):
                 print(f"✅ Resposta WhatsApp salva para {aluno.nome}")
 
         return HttpResponse('OK', status=200)
+
+
+# ===== NOVAS VIEWS PARA AVISO DE PROFESSOR =====
+
+def criar_aviso_professor(request):
+    """View pública para criar um novo aviso de professor"""
+    if request.method == 'POST':
+        form = AvisoProfessorForm(request.POST)
+        if form.is_valid():
+            aviso = form.save()
+            messages.success(request, '✅ Aviso enviado com sucesso! Obrigado por nos informar.')
+            return redirect('home')
+    else:
+        form = AvisoProfessorForm()
+    
+    return render(request, 'aviso_professor_form.html', {'form': form})
+
+
+@login_required
+def listar_avisos_professor(request):
+    """Lista avisos de professor (restrita para superusuário, staff e Equipe Diretiva)"""
+    # Verificar permissões
+    if not (request.user.is_superuser or request.user.is_staff or pertence_ao_grupo_equipe_diretiva(request.user)):
+        messages.error(request, '❌ Você não tem permissão para acessar esta página.')
+        return redirect('home')
+    
+    # Filtrar avisos
+    avisos = AvisoProfessor.objects.all().order_by('-data_criacao')
+    
+    # Filtro por visualização
+    visualizacao = request.GET.get('visualizacao', 'todos')
+    if visualizacao == 'nao_visualizados':
+        avisos = avisos.filter(visualizado=False)
+    elif visualizacao == 'visualizados':
+        avisos = avisos.filter(visualizado=True)
+    
+    # Filtro por tipo
+    tipo_aviso = request.GET.get('tipo', '')
+    if tipo_aviso:
+        avisos = avisos.filter(tipo_aviso=tipo_aviso)
+    
+    # Paginação
+    paginator = __import__('django.core.paginator', fromlist=['Paginator']).Paginator(avisos, 20)
+    page_number = request.GET.get('page', 1)
+    avisos_page = paginator.get_page(page_number)
+    
+    context = {
+        'avisos': avisos_page,
+        'visualizacao': visualizacao,
+        'tipo_aviso': tipo_aviso,
+        'tipos_choices': AvisoProfessor.TIPO_AVISO_CHOICES,
+    }
+    
+    return render(request, 'aviso_professor_lista.html', context)
+
+
+@login_required
+def marcar_aviso_visualizado(request, aviso_id):
+    """Marca um aviso como visualizado"""
+    # Verificar permissões
+    if not (request.user.is_superuser or request.user.is_staff or pertence_ao_grupo_equipe_diretiva(request.user)):
+        messages.error(request, '❌ Você não tem permissão para realizar esta ação.')
+        return redirect('home')
+    
+    try:
+        aviso = AvisoProfessor.objects.get(id=aviso_id)
+        aviso.marcar_como_visualizado(request.user)
+        messages.success(request, f'✅ Aviso de {aviso.nome_professor} marcado como visualizado.')
+    except AvisoProfessor.DoesNotExist:
+        messages.error(request, '❌ Aviso não encontrado.')
+    
+    return redirect('listar_avisos_professor')
+
+
+@login_required
+def detalhes_aviso_professor(request, aviso_id):
+    """Exibe os detalhes de um aviso específico"""
+    # Verificar permissões
+    if not (request.user.is_superuser or request.user.is_staff or pertence_ao_grupo_equipe_diretiva(request.user)):
+        messages.error(request, '❌ Você não tem permissão para visualizar esta página.')
+        return redirect('home')
+    
+    try:
+        aviso = AvisoProfessor.objects.get(id=aviso_id)
+        
+        # Marcar como visualizado se ainda não foi
+        if not aviso.visualizado:
+            aviso.marcar_como_visualizado(request.user)
+        
+        return render(request, 'aviso_professor_detalhes.html', {'aviso': aviso})
+    except AvisoProfessor.DoesNotExist:
+        messages.error(request, '❌ Aviso não encontrado.')
+        return redirect('listar_avisos_professor')
 
     return JsonResponse({'erro': 'Método não permitido'}, status=405)

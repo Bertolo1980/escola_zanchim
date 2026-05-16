@@ -217,3 +217,38 @@ class AlunoEditForm(forms.ModelForm):
             'ativo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+
+# ===== FORMULÁRIO PARA AVISO DE PROFESSOR =====
+class AvisoProfessorForm(forms.ModelForm):
+    class Meta:
+        from .models import AvisoProfessor
+        model = AvisoProfessor
+        fields = ['nome_professor', 'email_professor', 'tipo_aviso', 'data_aviso', 'descricao']
+        widgets = {
+            'nome_professor': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Digite seu nome completo',
+                'required': True
+            }),
+            'email_professor': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Digite seu e-mail',
+                'required': True
+            }),
+            'tipo_aviso': forms.Select(attrs={
+                'class': 'form-select',
+                'required': True
+            }),
+            'data_aviso': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'required': True
+            }),
+            'descricao': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Descreva os detalhes do seu aviso (atraso, falta, atestado, etc.)',
+                'required': True
+            }),
+        }
+

@@ -228,6 +228,58 @@
                     </span>
                 </div>
 
+                <!-- ===== CARD AVISOS DE PROFESSORES ===== -->
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-bell me-2"></i>🔔 Avisos de Professores</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if avisos_nao_visualizados|length > 0 %}
+                            <div class="alert alert-warning" role="alert">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <strong>{{ avisos_nao_visualizados|length }} novo(s) aviso(s) de professor(es)!</strong>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Professor</th>
+                                            <th>Tipo</th>
+                                            <th>Data</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for aviso in avisos_nao_visualizados %}
+                                            <tr>
+                                                <td>{{ aviso.nome_professor }}</td>
+                                                <td><span class="badge bg-info">{{ aviso.get_tipo_aviso_display }}</span></td>
+                                                <td>{{ aviso.data_criacao|date:"d/m/Y H:i" }}</td>
+                                                <td>
+                                                    <a href="{% url 'detalhes_aviso_professor' aviso.id %}" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i> Ver
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="{% url 'listar_avisos_professor' %}" class="btn btn-warning">
+                                <i class="fas fa-list me-1"></i>Ver Todos os Avisos
+                            </a>
+                        {% else %}
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Nenhum aviso de professor não visualizado.
+                            </div>
+                            <a href="{% url 'listar_avisos_professor' %}" class="btn btn-outline-warning">
+                                <i class="fas fa-list me-1"></i>Ver Histórico de Avisos
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <!-- ===== GRÁFICO DE FALTAS ===== -->
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">

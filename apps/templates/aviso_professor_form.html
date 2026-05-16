@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviso de Professor - Colégio Cívico Militar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .container-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 30px;
+            text-align: center;
+        }
+        .card-header h2 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        .card-header p {
+            font-size: 0.95em;
+            margin-bottom: 0;
+        }
+        .card-body {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 1em;
+            transition: 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            transition: 0.3s;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        .btn-back {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+        .info-box {
+            background-color: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .info-box i {
+            color: #667eea;
+            margin-right: 10px;
+        }
+        .tipo-aviso-help {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        footer {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-form">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-bell"></i> Aviso de Professor</h2>
+                <p>Informe sobre atraso, falta, atestado ou outras justificativas</p>
+            </div>
+            <div class="card-body">
+                <!-- Caixa de informação -->
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Instruções:</strong> Este formulário é público e não requer login. Preencha com seus dados e descrição do aviso.
+                </div>
+
+                <!-- Formulário -->
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Nome do Professor -->
+                    <div class="form-group">
+                        <label for="id_nome_professor" class="form-label">
+                            <i class="fas fa-user"></i> Nome Completo *
+                        </label>
+                        {{ form.nome_professor }}
+                        {% if form.nome_professor.errors %}
+                            <small class="text-danger">{{ form.nome_professor.errors }}</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- E-mail -->
+                    <div class="form-group">
+                        <label for="id_email_professor" class="form-label">
+                            <i class="fas fa-envelope"></i> E-mail *
+                        </label>
+                        {{ form.email_professor }}
+                        {% if form.email_professor.errors %}
+                            <small class="text-danger">{{ form.email_professor.errors }}</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tipo de Aviso -->
+                    <div class="form-group">
+                        <label for="id_tipo_aviso" class="form-label">
+                            <i class="fas fa-tag"></i> Tipo de Aviso *
+                        </label>
+                        {{ form.tipo_aviso }}
+                        <div class="tipo-aviso-help">
+                            Selecione a categoria mais apropriada para seu aviso.
+                        </div>
+                        {% if form.tipo_aviso.errors %}
+                            <small class="text-danger">{{ form.tipo_aviso.errors }}</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Data do Aviso -->
+                    <div class="form-group">
+                        <label for="id_data_aviso" class="form-label">
+                            <i class="fas fa-calendar-alt"></i> Data do Aviso *
+                        </label>
+                        {{ form.data_aviso }}
+                        {% if form.data_aviso.errors %}
+                            <small class="text-danger">{{ form.data_aviso.errors }}</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="form-group">
+                        <label for="id_descricao" class="form-label">
+                            <i class="fas fa-pencil-alt"></i> Descrição/Justificativa *
+                        </label>
+                        {{ form.descricao }}
+                        {% if form.descricao.errors %}
+                            <small class="text-danger">{{ form.descricao.errors }}</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Botões -->
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-paper-plane"></i> Enviar Aviso
+                    </button>
+                    <a href="{% url 'home' %}" class="btn btn-secondary btn-back">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Colégio Cívico Militar Vereador Luiz Zanchim. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

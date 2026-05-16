@@ -82,6 +82,13 @@ urlpatterns = [
     path('laboratorios/emprestimo/<int:lab_id>/', views.emprestimo_equipamento, name='emprestimo_equipamento'),
     path('laboratorios/devolver/<int:emprestimo_id>/', views.devolver_equipamento, name='devolver_equipamento'),
     path('laboratorios/emprestimos/', views.listar_emprestimos, name='listar_emprestimos'),
+    
+    # ===== NOVAS URLs PARA AVISO DE PROFESSOR =====
+    path('aviso-professor/', views.criar_aviso_professor, name='criar_aviso_professor'),
+    path('avisos-professores/', views.listar_avisos_professor, name='listar_avisos_professor'),
+    path('avisos-professores/<int:aviso_id>/visualizar/', views.marcar_aviso_visualizado, name='marcar_aviso_visualizado'),
+    path('avisos-professores/<int:aviso_id>/detalhes/', views.detalhes_aviso_professor, name='detalhes_aviso_professor'),
+    
     path('', views.home, name='home'),
     path('laboratorios/cronograma/print/', views.cronograma_print, name='cronograma_print'),
     path('laboratorios/cronograma/exportar-excel/', views.exportar_cronograma_excel, name='exportar_cronograma_excel'),
