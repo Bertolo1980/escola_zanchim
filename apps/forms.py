@@ -1,6 +1,6 @@
 from django import forms
 from django.utils import timezone
-from .models import RecadoInterno, DocumentoPrivado, EventoPrivado, RegistroOcorrenciaAluno, Aluno, Turma
+from .models import RecadoInterno, DocumentoPrivado, EventoPrivado, RegistroOcorrenciaAluno, Aluno, Turma, AvisoProfessor
 
 # ===== FORMULÁRIOS EXISTENTES =====
 
@@ -221,7 +221,6 @@ class AlunoEditForm(forms.ModelForm):
 # ===== FORMULÁRIO PARA AVISO DE PROFESSOR =====
 class AvisoProfessorForm(forms.ModelForm):
     class Meta:
-        from .models import AvisoProfessor
         model = AvisoProfessor
         fields = ['nome_professor', 'email_professor', 'tipo_aviso', 'data_aviso', 'descricao']
         widgets = {

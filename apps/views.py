@@ -2639,5 +2639,3 @@ def detalhes_aviso_professor(request, aviso_id):
     except AvisoProfessor.DoesNotExist:
         messages.error(request, '❌ Aviso não encontrado.')
         return redirect('listar_avisos_professor')
-
-    return JsonResponse({'erro': 'Método não permitido'}, status=405)
