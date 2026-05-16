@@ -222,7 +222,7 @@ class AlunoEditForm(forms.ModelForm):
 class AvisoProfessorForm(forms.ModelForm):
     class Meta:
         model = AvisoProfessor
-        fields = ['nome_professor', 'email_professor', 'tipo_aviso', 'data_aviso', 'descricao']
+        fields = ['nome_professor', 'email_professor', 'tipo_aviso', 'data_aviso', 'dias_atestado', 'descricao']
         widgets = {
             'nome_professor': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -236,12 +236,19 @@ class AvisoProfessorForm(forms.ModelForm):
             }),
             'tipo_aviso': forms.Select(attrs={
                 'class': 'form-select',
-                'required': True
+                'required': True,
+                'id': 'id_tipo_aviso'
             }),
             'data_aviso': forms.DateInput(attrs={
                 'class': 'form-control',
                 'type': 'date',
                 'required': True
+            }),
+            'dias_atestado': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Quantidade de dias',
+                'min': '1',
+                'id': 'id_dias_atestado'
             }),
             'descricao': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -250,4 +257,14 @@ class AvisoProfessorForm(forms.ModelForm):
                 'required': True
             }),
         }
-
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo_aviso = cleaned_data.get('tipo_aviso')
+        dias_atestado = cleaned_data.get('dias_atestado')
+        
+        if tipo_aviso == 'atestado':
+            if dias_atestado is None or dias_atestado < 1:
+                self.add_error('dias_atestado', 'Se o tipo for "Atestado", preencha com pelo menos 1 dia.')
+        
+        return cleaned_data

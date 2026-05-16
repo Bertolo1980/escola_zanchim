@@ -2635,7 +2635,163 @@ def detalhes_aviso_professor(request, aviso_id):
         if not aviso.visualizado:
             aviso.marcar_como_visualizado(request.user)
         
-        return render(request, 'aviso_professor_detalhes.html', {'aviso': aviso})
+        context = {
+            'aviso': aviso,
+            'aviso_pode_deletar': (
+                request.user.is_superuser or 
+                request.user.is_staff or 
+                pertence_ao_grupo_equipe_diretiva(request.user)
+            )
+        }
+        return render(request, 'aviso_professor_detalhes.html', context)
     except AvisoProfessor.DoesNotExist:
         messages.error(request, '❌ Aviso não encontrado.')
         return redirect('listar_avisos_professor')
+
+
+@login_required
+def deletar_aviso_professor(request, aviso_id):
+    """Deleta um aviso (apenas para superusuário, staff e Equipe Diretiva)"""
+    # Verificar permissões
+    if not (request.user.is_superuser or request.user.is_staff or pertence_ao_grupo_equipe_diretiva(request.user)):
+        messages.error(request, '❌ Você não tem permissão para deletar avisos.')
+        return redirect('listar_avisos_professor')
+    
+    try:
+        aviso = AvisoProfessor.objects.get(id=aviso_id)
+        nome_professor = aviso.nome_professor
+        
+        if request.method == 'POST':
+            # Confirmar exclusão
+            aviso.delete()
+            messages.success(request, f'✅ Aviso de {nome_professor} deletado com sucesso.')
+            return redirect('listar_avisos_professor')
+        
+        # GET - Mostrar página de confirmação
+        return render(request, 'confirmar_exclusao_aviso_professor.html', {'aviso': aviso})
+    
+    except AvisoProfessor.DoesNotExist:
+        messages.error(request, '❌ Aviso não encontrado.')
+        return redirect('listar_avisos_professor')
+
+
+@login_required
+def exportar_aviso_professor(request, aviso_id):
+    """Exporta um aviso específico para CSV"""
+    # Verificar permissões
+    if not (request.user.is_superuser or request.user.is_staff or pertence_ao_grupo_equipe_diretiva(request.user)):
+        messages.error(request, '❌ Você não tem permissão para exportar avisos.')
+        return redirect('listar_avisos_professor')
+    
+    try:
+        aviso = AvisoProfessor.objects.get(id=aviso_id)
+        
+        # Criar resposta CSV
+        response = __import__('django.http', fromlist=['HttpResponse']).HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="aviso_professor_{aviso.id}_{aviso.data_criacao.strftime("%d%m%Y")}.csv"'
+        
+        # Adicionar BOM para Excel ler corretamente
+        response.write('\ufeff')
+        
+        import csv
+        writer = csv.writer(response, delimiter=';')
+        
+        # Cabeçalho
+        writer.writerow([
+            'Nome do Professor',
+            'E-mail',
+            'Tipo de Aviso',
+            'Data do Aviso',
+            'Dias de Atestado',
+            'Descrição/Justificativa',
+            'Status',
+            'Data de Criação',
+            'Visualizado por',
+            'Data de Visualização'
+        ])
+        
+        # Dados do aviso
+        writer.writerow([
+            aviso.nome_professor,
+            aviso.email_professor,
+            aviso.get_tipo_aviso_display(),
+            aviso.data_aviso.strftime('%d/%m/%Y'),
+            aviso.dias_atestado if aviso.dias_atestado else '',
+            aviso.descricao.replace('\n', ' '),
+            'Visualizado' if aviso.visualizado else 'Novo',
+            aviso.data_criacao.strftime('%d/%m/%Y %H:%M'),
+            f"{aviso.visualizado_por.first_name} {aviso.visualizado_por.last_name}" if aviso.visualizado_por else '',
+            aviso.visualizado_em.strftime('%d/%m/%Y %H:%M') if aviso.visualizado_em else ''
+        ])
+        
+        return response
+    
+    except AvisoProfessor.DoesNotExist:
+        messages.error(request, '❌ Aviso não encontrado.')
+        return redirect('listar_avisos_professor')
+
+
+@login_required
+def exportar_avisos_professor(request):
+    """Exporta todos os avisos para CSV com filtros aplicados"""
+    # Verificar permissões
+    if not (request.user.is_superuser or request.user.is_staff or pertence_ao_grupo_equipe_diretiva(request.user)):
+        messages.error(request, '❌ Você não tem permissão para exportar avisos.')
+        return redirect('listar_avisos_professor')
+    
+    # Aplicar mesmos filtros da listagem
+    avisos = AvisoProfessor.objects.all().order_by('-data_criacao')
+    
+    # Filtro por visualização
+    visualizacao = request.GET.get('visualizacao', 'todos')
+    if visualizacao == 'nao_visualizados':
+        avisos = avisos.filter(visualizado=False)
+    elif visualizacao == 'visualizados':
+        avisos = avisos.filter(visualizado=True)
+    
+    # Filtro por tipo
+    tipo_aviso = request.GET.get('tipo', '')
+    if tipo_aviso:
+        avisos = avisos.filter(tipo_aviso=tipo_aviso)
+    
+    # Criar resposta CSV
+    response = __import__('django.http', fromlist=['HttpResponse']).HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="avisos_professores_{__import__("datetime", fromlist=["datetime"]).datetime.now().strftime("%d%m%Y")}.csv"'
+    
+    # Adicionar BOM para Excel ler corretamente
+    response.write('\ufeff')
+    
+    import csv
+    writer = csv.writer(response, delimiter=';')
+    
+    # Cabeçalho
+    writer.writerow([
+        'Nome do Professor',
+        'E-mail',
+        'Tipo de Aviso',
+        'Data do Aviso',
+        'Dias de Atestado',
+        'Descrição/Justificativa',
+        'Status',
+        'Data de Criação',
+        'Visualizado por',
+        'Data de Visualização'
+    ])
+    
+    # Dados dos avisos
+    for aviso in avisos:
+        writer.writerow([
+            aviso.nome_professor,
+            aviso.email_professor,
+            aviso.get_tipo_aviso_display(),
+            aviso.data_aviso.strftime('%d/%m/%Y'),
+            aviso.dias_atestado if aviso.dias_atestado else '',
+            aviso.descricao.replace('\n', ' '),
+            'Visualizado' if aviso.visualizado else 'Novo',
+            aviso.data_criacao.strftime('%d/%m/%Y %H:%M'),
+            f"{aviso.visualizado_por.first_name} {aviso.visualizado_por.last_name}" if aviso.visualizado_por else '',
+            aviso.visualizado_em.strftime('%d/%m/%Y %H:%M') if aviso.visualizado_em else ''
+        ])
+    
+    messages.success(request, f'✅ {avisos.count()} aviso(s) exportado(s) com sucesso.')
+    return response

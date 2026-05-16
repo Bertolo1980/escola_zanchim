@@ -88,6 +88,9 @@ urlpatterns = [
     path('avisos-professores/', views.listar_avisos_professor, name='listar_avisos_professor'),
     path('avisos-professores/<int:aviso_id>/visualizar/', views.marcar_aviso_visualizado, name='marcar_aviso_visualizado'),
     path('avisos-professores/<int:aviso_id>/detalhes/', views.detalhes_aviso_professor, name='detalhes_aviso_professor'),
+    path('avisos-professores/<int:aviso_id>/deletar/', views.deletar_aviso_professor, name='deletar_aviso_professor'),
+    path('avisos-professores/<int:aviso_id>/exportar/', views.exportar_aviso_professor, name='exportar_aviso_professor'),
+    path('avisos-professores/exportar-todos/', views.exportar_avisos_professor, name='exportar_avisos_professor'),
     
     path('', views.home, name='home'),
     path('laboratorios/cronograma/print/', views.cronograma_print, name='cronograma_print'),

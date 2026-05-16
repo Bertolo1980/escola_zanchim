@@ -7,54 +7,67 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+        }
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            padding: 20px 0;
+            padding: 15px;
         }
         .container-form {
-            max-width: 600px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 650px;
+            margin: 20px auto;
+            flex-grow: 1;
         }
         .card {
             border: none;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
         }
         .card-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: 15px 15px 0 0;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
         }
         .card-header h2 {
-            font-size: 1.8em;
-            margin-bottom: 10px;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
         }
         .card-header p {
-            font-size: 0.95em;
+            font-size: 0.9rem;
             margin-bottom: 0;
+            opacity: 0.95;
         }
         .card-body {
-            padding: 30px;
+            padding: 20px;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .form-label {
             font-weight: 600;
             color: #333;
             margin-bottom: 8px;
+            font-size: 0.95rem;
         }
         .form-control, .form-select {
             border: 2px solid #e9ecef;
             border-radius: 8px;
-            padding: 10px 15px;
-            font-size: 1em;
-            transition: 0.3s;
+            padding: 10px 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
         }
         .form-control:focus, .form-select:focus {
             border-color: #667eea;
@@ -62,29 +75,33 @@
         }
         textarea.form-control {
             resize: vertical;
-            min-height: 120px;
+            min-height: 100px;
         }
         .btn-submit {
             width: 100%;
             padding: 12px;
-            font-size: 1.1em;
+            font-size: 1rem;
             font-weight: 600;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             border-radius: 8px;
             color: white;
-            transition: 0.3s;
+            transition: all 0.3s ease;
         }
         .btn-submit:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
             color: white;
         }
+        .btn-submit:active {
+            transform: translateY(0);
+        }
         .btn-back {
             width: 100%;
             padding: 12px;
-            font-size: 1em;
+            font-size: 1rem;
             margin-top: 10px;
+            border-radius: 8px;
         }
         .info-box {
             background-color: #f0f4ff;
@@ -92,21 +109,86 @@
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
+            font-size: 0.95rem;
         }
         .info-box i {
             color: #667eea;
             margin-right: 10px;
         }
         .tipo-aviso-help {
-            font-size: 0.9em;
+            font-size: 0.85rem;
             color: #6c757d;
             margin-top: 5px;
         }
+        .dias-atestado-group {
+            display: none;
+        }
+        .dias-atestado-group.show {
+            display: block;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: block;
+        }
+        .errorlist {
+            list-style: none;
+            padding: 0;
+        }
+        .errorlist li {
+            color: #dc3545;
+            font-size: 0.85rem;
+        }
         footer {
             text-align: center;
-            color: #999;
-            padding: 20px;
-            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 20px 15px;
+            font-size: 0.85rem;
+            margin-top: auto;
+            width: 100%;
+        }
+        
+        /* Responsividade */
+        @media (max-width: 576px) {
+            .card-header {
+                padding: 15px;
+            }
+            .card-header h2 {
+                font-size: 1.3rem;
+            }
+            .card-body {
+                padding: 15px;
+            }
+            .form-label {
+                font-size: 0.9rem;
+            }
+            .form-control, .form-select {
+                font-size: 0.95rem;
+                padding: 8px 10px;
+            }
+            .info-box {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .container-form {
+                max-width: 700px;
+            }
+            .card-body {
+                padding: 30px;
+            }
+            .card-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .container-form {
+                max-width: 750px;
+            }
         }
     </style>
 </head>
@@ -125,7 +207,7 @@
                 </div>
 
                 <!-- Formulário -->
-                <form method="POST" novalidate>
+                <form method="POST" novalidate id="formAviso">
                     {% csrf_token %}
 
                     <!-- Nome do Professor -->
@@ -135,7 +217,7 @@
                         </label>
                         {{ form.nome_professor }}
                         {% if form.nome_professor.errors %}
-                            <small class="text-danger">{{ form.nome_professor.errors }}</small>
+                            {{ form.nome_professor.errors }}
                         {% endif %}
                     </div>
 
@@ -146,7 +228,7 @@
                         </label>
                         {{ form.email_professor }}
                         {% if form.email_professor.errors %}
-                            <small class="text-danger">{{ form.email_professor.errors }}</small>
+                            {{ form.email_professor.errors }}
                         {% endif %}
                     </div>
 
@@ -160,7 +242,21 @@
                             Selecione a categoria mais apropriada para seu aviso.
                         </div>
                         {% if form.tipo_aviso.errors %}
-                            <small class="text-danger">{{ form.tipo_aviso.errors }}</small>
+                            {{ form.tipo_aviso.errors }}
+                        {% endif %}
+                    </div>
+
+                    <!-- Dias de Atestado (aparece quando tipo é "atestado") -->
+                    <div class="form-group dias-atestado-group" id="dias_atestado_group">
+                        <label for="id_dias_atestado" class="form-label">
+                            <i class="fas fa-calendar-check"></i> Quantos dias de atestado? *
+                        </label>
+                        {{ form.dias_atestado }}
+                        <div class="tipo-aviso-help">
+                            Preencha com a quantidade de dias do atestado (mínimo 1 dia).
+                        </div>
+                        {% if form.dias_atestado.errors %}
+                            {{ form.dias_atestado.errors }}
                         {% endif %}
                     </div>
 
@@ -171,7 +267,7 @@
                         </label>
                         {{ form.data_aviso }}
                         {% if form.data_aviso.errors %}
-                            <small class="text-danger">{{ form.data_aviso.errors }}</small>
+                            {{ form.data_aviso.errors }}
                         {% endif %}
                     </div>
 
@@ -182,7 +278,7 @@
                         </label>
                         {{ form.descricao }}
                         {% if form.descricao.errors %}
-                            <small class="text-danger">{{ form.descricao.errors }}</small>
+                            {{ form.descricao.errors }}
                         {% endif %}
                     </div>
 
@@ -203,5 +299,22 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mostrar/ocultar campo de dias_atestado conforme o tipo de aviso
+        document.getElementById('id_tipo_aviso').addEventListener('change', function() {
+            const diasAtestadoGroup = document.getElementById('dias_atestado_group');
+            if (this.value === 'atestado') {
+                diasAtestadoGroup.classList.add('show');
+                document.getElementById('id_dias_atestado').required = true;
+            } else {
+                diasAtestadoGroup.classList.remove('show');
+                document.getElementById('id_dias_atestado').required = false;
+                document.getElementById('id_dias_atestado').value = '';
+            }
+        });
+
+        // Disparar evento ao carregar a página se o tipo já está selecionado
+        document.getElementById('id_tipo_aviso').dispatchEvent(new Event('change'));
+    </script>
 </body>
 </html>

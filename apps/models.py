@@ -613,6 +613,13 @@ class AvisoProfessor(models.Model):
         help_text="Qual é a data em questão?"
     )
     
+    dias_atestado = models.IntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Quantos dias de atestado",
+        help_text="Preencha apenas se o tipo for 'Atestado'"
+    )
+    
     visualizado = models.BooleanField(
         default=False,
         verbose_name="Visualizado"
@@ -654,6 +661,13 @@ class AvisoProfessor(models.Model):
     
     def __str__(self):
         return f"{self.nome_professor} - {self.get_tipo_aviso_display()} ({self.data_aviso})"
+    
+    def clean(self):
+        """Validação customizada para o aviso"""
+        from django.core.exceptions import ValidationError
+        
+        if self.tipo_aviso == 'atestado' and (self.dias_atestado is None or self.dias_atestado < 1):
+            raise ValidationError("Se o tipo for 'Atestado', preencha o campo 'Quantos dias de atestado' com pelo menos 1 dia.")
     
     def marcar_como_visualizado(self, usuario):
         """Marca o aviso como visualizado por um usuário"""
